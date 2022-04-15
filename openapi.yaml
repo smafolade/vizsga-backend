@@ -1,0 +1,552 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Wallet API
+  description: A sample API to illustrate OpenAPI concepts
+servers:
+  - url: https://wallet.webuni.workers.dev/
+tags:
+  - name: Users
+  - name: Wallets
+  - name: Transactions
+paths:
+  /login:
+    post:
+      description: Login
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+              required: ['name', 'password']
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+  /reg:
+    post:
+      description: Registration endpoint
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+              required: ['name', 'password']
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /user/{id}:
+    get:
+      description: Get user data without wallets
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWithoutWallets'
+
+  /user/search:
+    post:
+      description: Get a user id using a name (needs full match)
+      tags:
+        - Users
+      security:
+        - ApiKeyAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: user's name
+              required: ['name']
+      responses:
+        '200':
+          description: Returns the ID of the user, or a 404
+          content:
+            application/json:
+              schema:
+                type: string
+                description: user_id
+  /user/list:
+    post:
+      description: Get a list of users
+      tags:
+        - Users
+      security:
+        - ApiKeyAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prefix:
+                  type: string
+                  description: beginning of the username
+                limit:
+                  type: number
+                  description: maximum amount of transactions to receive
+                  default: 5
+                cursor:
+                  type: string
+                  description: cursor for paging
+                  default: ''
+      responses:
+        '200':
+          description: A list of users with some metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersList'
+  /wallets:
+    get:
+      description: Get a list of wallets the user has access
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          description: A list of wallets the user has access to
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of wallets the user can access
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+  /wallet:
+    put:
+      description: Create a new wallet
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: name of the wallet
+                description:
+                  type: string
+                  description: short description
+                extra:
+                  type: object
+                  default: {}
+                  description: anything else you want to store
+      responses:
+        '200':
+          description: The newly created wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+  /wallet/{id}:
+    get:
+      description: Get info on a waller
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: The newly created wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+    patch:
+      description: Create a new wallet
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: short description
+                extra:
+                  type: object
+                  default: {}
+                  description: anything else you want to store
+      responses:
+        '200':
+          description: The modified wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+    delete:
+      description: Create a new wallet
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: The deleted wallet, one more time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+  /wallet/{id}/grant_access:
+    post:
+      description: Grant access to a user to a wallet
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  description: id of the other user
+      responses:
+        '200':
+          description: The modified wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+  /wallet/{id}/remove_access:
+    post:
+      description: Remove access to a user to a wallet
+      tags:
+        - Wallets
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  description: id of the other user
+      responses:
+        '200':
+          description: The modified wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+  /transactions:
+    post:
+      description: Get a list of transactions
+      tags:
+        - Transactions
+      security:
+        - ApiKeyAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_id:
+                  type: string
+                  description: wallet id to grab transactions from
+                limit:
+                  type: number
+                  description: maximum amount of transactions to receive
+                  default: 5
+                cursor:
+                  type: string
+                  description: cursor for paging
+                  default: ''
+              required: ['wallet_id']
+      responses:
+        '200':
+          description: A list of transactions with some metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionList'
+    put:
+      description: Add a new transaction
+      tags:
+        - Transactions
+      security:
+        - ApiKeyAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_id:
+                  type: string
+                  description: wallet id to push the transaction
+                title:
+                  type: string
+                  description: Transaction title
+                  default: ''
+                amount:
+                  type: number
+                extra:
+                  default: {}
+                  type: object
+      responses:
+        '200':
+          description: The newly created suggestion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transaction/{id}:
+    get:
+      description: Get a transaction
+      tags:
+        - Transactions
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: The transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+    patch:
+      description: Get a transaction
+      tags:
+        - Transactions
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Transaction title
+                  default: ''
+                amount:
+                  type: number
+                extra:
+                  default: {}
+                  type: object
+      responses:
+        '200':
+          description: The transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+    delete:
+      description: Delete a transaction
+      tags:
+        - Transactions
+      security:
+        - ApiKeyAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: The deleted transaction is returned one last time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      description: Authentication header
+      type: http
+      scheme: bearer
+      bearerFormat: string
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        wallets:
+          type: array
+          description: List of wallets the user can access
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+    UserWithoutWallets:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        extra:
+          type: object
+          default: {}
+          description: anything else you want to store
+        access:
+          type: array
+          description: a list of users who can access the wallet
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+        balance:
+          type: number
+          description: current balance of the wallet
+        created_by:
+          type: object
+          description: the user who created the wallet
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+        created_at:
+          type: string
+          description: date and time when the wallet was created
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        amount:
+          type: number
+        wallet_id:
+          type: string
+          description: the id of the wallet
+        extra:
+          type: object
+          default: {}
+          description: anything else you want to store
+        created_by:
+          type: object
+          description: the user who created the transaction
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+        created_at:
+          type: string
+          description: date and time when the transaction was created
+    TransactionList:
+      type: object
+      properties:
+        has_more:
+          type: boolean
+          description: true indicates that might be more items in the database than the current limit
+        cursor:
+          type: string
+          description: a cursor that can be used during paging
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+      required: ['transactions']
+    UsersList:
+      type: object
+      properties:
+        has_more:
+          type: boolean
+          description: true indicates that might be more items in the database than the current limit
+        cursor:
+          type: string
+          description: a cursor that can be used during paging
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserWithoutWallets'
+      required: [ 'users' ]

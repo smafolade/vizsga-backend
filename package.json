@@ -1,0 +1,17 @@
+{
+  "name": "nagyhazi-worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "miniflare --kv WALLET --kv-persist --watch index.js",
+    "pretty": "prettier --write index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "miniflare": "^2.3.0",
+    "prettier": "^2.5.1"
+  }
+}
