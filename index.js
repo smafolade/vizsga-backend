@@ -462,7 +462,6 @@ async function listTransactions(me, data) {
 async function listTransactionsByUserId(me) {
   protect(me);
   // just to make sure we have access
-  const [_walletKey, wallet] = await grabProtectedWallet("MTcyODI1MzEyNjYxNTcxNTM");
 
   /*const alltransactions = await WALLET.list({
     prefix: `transaction_${wallet.id}_`,
